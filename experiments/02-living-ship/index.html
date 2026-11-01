@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#070b0d">
+  <title>Эксперимент 2 — Живой корабль · 99 экспериментов</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <button id="btn-pause" class="hud-btn hidden" aria-label="Геном и пауза">☰<span>геном</span></button>
+
+  <!-- Меню -->
+  <section id="screen-menu" class="screen">
+    <div class="panel menu-panel">
+      <div class="exp-tag">ЭКСПЕРИМЕНТ 02</div>
+      <h1>Живой корабль</h1>
+      <p class="tagline">Ты проектируешь не корабль, а семя. В бою по нему работает клеточный автомат: корабль растёт, мутирует и залечивает раны по своим правилам.</p>
+      <div class="menu-stats" id="menu-stats"></div>
+      <div class="menu-buttons">
+        <button class="btn primary" id="btn-yard">Верфь → в бой</button>
+        <button class="btn" id="btn-lab">Лаборатория</button>
+        <button class="btn" id="btn-help">Как играть</button>
+        <a class="btn ghost" href="../../index.html">← К списку экспериментов</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Помощь -->
+  <section id="screen-help" class="screen hidden">
+    <div class="panel help-panel">
+      <h2>Как играть</h2>
+      <ul class="help-list">
+        <li><b>Верфь.</b> На сетке расставь <b>семя</b> — несколько клеток вокруг ядра. Количество ограничено слотами.</li>
+        <li><b>Питание.</b> Ядро питает клетки рядом (подсвеченная зона). Клетки без питания голодают и гибнут. Запитанные <b>реакторы</b> расширяют зону.</li>
+        <li><b>Рост.</b> Каждый такт (≈0.5 с) клетки рождаются и умирают по правилам, которые зависят от соседей. Правила видны в панели <b>«Геном»</b>.</li>
+        <li><b>Симуляция.</b> Кнопка ▶ на верфи прокручивает рост без врагов. Рост детерминирован: одно и то же семя всегда растёт одинаково.</li>
+        <li><b>Бой.</b> WASD / стрелки или палец по экрану — движение. Пушки стреляют сами. Враги грызут внешние клетки, автомат отращивает их заново… если может.</li>
+        <li><b>Мутации.</b> После каждой волны выбери награду: мутацию правил или прививку новых клеток прямо в живой корабль.</li>
+        <li><b>Штаммы.</b> В конце забега самая большая форма корабля сохраняется как <span class="c-green">штамм</span> вместе с мутациями. Его можно загрузить на верфи как готовое семя — клетки штамма не занимают слоты.</li>
+      </ul>
+      <button class="btn primary" data-back>Понятно</button>
+    </div>
+  </section>
+
+  <!-- Верфь -->
+  <section id="screen-yard" class="screen hidden">
+    <div class="panel yard-panel">
+      <div class="yard-head">
+        <h2>Верфь</h2>
+        <div class="muted small" id="yard-info"></div>
+      </div>
+      <div class="yard-body">
+        <div class="yard-left">
+          <div class="palette" id="yard-palette"></div>
+          <div class="grid-wrap"><div id="yard-grid" class="cellgrid"></div></div>
+          <div class="sim-bar">
+            <button class="btn small" id="sim-toggle">▶ Симуляция</button>
+            <input type="range" id="sim-slider" min="0" max="40" value="0" disabled>
+            <span class="muted small" id="sim-label">такт 0</span>
+          </div>
+          <div class="sim-stats small" id="sim-stats"></div>
+        </div>
+        <div class="yard-right">
+          <h3>Геном</h3>
+          <div id="yard-genome" class="genome"></div>
+          <h3>Штаммы</h3>
+          <div id="yard-strains" class="strain-list"></div>
+        </div>
+      </div>
+      <div class="yard-foot">
+        <button class="btn ghost small" id="yard-clear">Очистить</button>
+        <button class="btn" data-back>Назад</button>
+        <button class="btn primary" id="yard-start">В бой</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Лаборатория -->
+  <section id="screen-lab" class="screen hidden">
+    <div class="panel lab-panel">
+      <div class="lab-head">
+        <h2>Лаборатория</h2>
+        <div class="samples" id="lab-biomass"></div>
+      </div>
+      <h3>Улучшения</h3>
+      <div class="cards" id="lab-upgrades"></div>
+      <h3>Новые клетки</h3>
+      <div class="cards" id="lab-unlocks"></div>
+      <div class="lab-foot">
+        <button class="btn primary" id="lab-yard">На верфь</button>
+        <button class="btn" data-back>Назад</button>
+        <button class="btn danger small" id="lab-reset">Сбросить прогресс</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Награда после волны -->
+  <section id="screen-reward" class="screen hidden overlay">
+    <div class="panel reward-panel">
+      <h2 id="reward-title">Волна пережита! Выбери мутацию</h2>
+      <div id="reward-cards" class="offers"></div>
+      <div id="graft-box" class="hidden">
+        <p id="graft-info" class="small"></p>
+        <div class="grid-wrap"><div id="graft-grid" class="cellgrid"></div></div>
+        <div class="reward-foot"><button class="btn primary" id="graft-done">Готово</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Пауза / геном -->
+  <section id="screen-pause" class="screen hidden overlay">
+    <div class="panel pause-panel">
+      <h2>Геном корабля</h2>
+      <div class="pause-body">
+        <div class="grid-wrap"><div id="pause-grid" class="cellgrid"></div></div>
+        <div>
+          <div id="pause-genome" class="genome"></div>
+          <h3>Мутации</h3>
+          <div id="pause-mutations" class="mut-list"></div>
+        </div>
+      </div>
+      <div class="pause-foot">
+        <button class="btn danger small" id="pause-quit">Завершить забег</button>
+        <button class="btn primary" id="pause-continue">Продолжить</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Итоги -->
+  <section id="screen-results" class="screen hidden overlay">
+    <div class="panel results-panel">
+      <h2>Ядро погибло</h2>
+      <div id="results-body"></div>
+      <div class="menu-buttons">
+        <button class="btn primary" id="res-yard">На верфь</button>
+        <button class="btn" id="res-lab">В лабораторию</button>
+        <button class="btn ghost" id="res-menu">В меню</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/data.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/automaton.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
