@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Эксперимент 1 — Матрёшка · 99 экспериментов</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- Главное меню эксперимента -->
+  <section id="screen-menu" class="screen">
+    <div class="panel menu-panel">
+      <div class="exp-tag">ЭКСПЕРИМЕНТ 01</div>
+      <h1>Матрёшка</h1>
+      <p class="tagline">Твои снаряды — тоже корабли. Вставляй оружие в пули, пули в пули, а прошлые забеги — внутрь всего этого.</p>
+      <div class="menu-stats" id="menu-stats"></div>
+      <div class="menu-buttons">
+        <button class="btn primary" id="btn-start">Начать забег</button>
+        <button class="btn" id="btn-lab">Лаборатория</button>
+        <button class="btn" id="btn-help">Как играть</button>
+        <a class="btn ghost" href="../../index.html">← К списку экспериментов</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Как играть -->
+  <section id="screen-help" class="screen hidden">
+    <div class="panel help-panel">
+      <h2>Как играть</h2>
+      <ul class="help-list">
+        <li><b>WASD / стрелки</b> — движение. Корабль стреляет сам по ближайшему врагу. Зажми <b>ЛКМ</b>, чтобы целиться вручную.</li>
+        <li>Собирай <span class="c-green">зелёный опыт</span>. За каждый уровень выбираешь модуль из трёх.</li>
+        <li><b>Схема</b> (E / Tab) — это дерево. Модули в слотах корабля влияют на его снаряды.</li>
+        <li><b>Триггеры</b> (Турель, Осколки, Искра, Спутники, Минёр) сами содержат схему вложенного снаряда. Это и есть матрёшка: пуля, которая стреляет пулями, которые разлетаются осколками…</li>
+        <li>Глубина вложенности ограничена. Расширяй её в <b>Лаборатории</b> за образцы, полученные в забегах.</li>
+        <li>Когда забег заканчивается, вся твоя сборка превращается в <span class="c-amber">◈ Окаменелость</span> — модуль, который можно взять в следующий забег. Окаменелость внутри окаменелости внутри окаменелости — тоже можно.</li>
+      </ul>
+      <button class="btn primary" data-back>Понятно</button>
+    </div>
+  </section>
+
+  <!-- Лаборатория -->
+  <section id="screen-lab" class="screen hidden">
+    <div class="panel lab-panel">
+      <div class="lab-head">
+        <h2>Лаборатория</h2>
+        <div class="samples" id="lab-samples"></div>
+      </div>
+      <div class="lab-cols">
+        <div>
+          <h3>Улучшения</h3>
+          <div class="cards" id="lab-upgrades"></div>
+          <h3>Новые модули</h3>
+          <div class="cards" id="lab-unlocks"></div>
+        </div>
+        <div>
+          <h3>Окаменелости <span class="muted" id="lab-fossil-cap"></span></h3>
+          <p class="muted small">Отметь, какие взять в следующий забег. Они появятся в запасе модулей.</p>
+          <div id="lab-fossils" class="fossil-list"></div>
+        </div>
+      </div>
+      <div class="lab-foot">
+        <button class="btn primary" id="lab-start">Начать забег</button>
+        <button class="btn" data-back>Назад</button>
+        <button class="btn danger small" id="lab-reset">Сбросить прогресс</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Схема / выбор модуля -->
+  <section id="screen-editor" class="screen hidden overlay">
+    <div class="panel editor-panel">
+      <div class="editor-head">
+        <h2 id="editor-title">Схема</h2>
+        <div class="muted small" id="editor-sub"></div>
+      </div>
+      <div id="editor-offers" class="offers"></div>
+      <div class="editor-body">
+        <div class="tree-wrap">
+          <div id="editor-tree"></div>
+        </div>
+        <div class="side">
+          <h3>Запас</h3>
+          <div id="editor-inventory" class="inventory"></div>
+          <div id="editor-info" class="info"></div>
+        </div>
+      </div>
+      <div class="editor-foot">
+        <span id="editor-msg" class="msg"></span>
+        <button class="btn danger small" id="editor-quit">Завершить забег</button>
+        <button class="btn primary" id="editor-continue">Продолжить</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Итоги -->
+  <section id="screen-results" class="screen hidden overlay">
+    <div class="panel results-panel">
+      <h2>Забег окончен</h2>
+      <div id="results-body"></div>
+      <div class="menu-buttons">
+        <button class="btn primary" id="res-lab">В лабораторию</button>
+        <button class="btn" id="res-again">Ещё забег</button>
+        <button class="btn ghost" id="res-menu">В меню</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/data.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/tree.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
