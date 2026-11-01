@@ -1,0 +1,21 @@
+/* Эксперимент 3: тёплая «лазерная» палитра */
+:root {
+  --accent: #ffd43b; --bg: #07070f; --panel: #12101e; --panel-2: #1b1830; --line: #2e2a4f; --muted: #8b86b8;
+  --screen-glow: #1d1830;
+}
+.btn.primary { background: #3b3010; border-color: var(--accent); color: #fff6d5; }
+
+.bench-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.bench-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bench-wrap { width: 100%; display: flex; justify-content: center; }
+#bench-canvas { border-radius: 10px; border: 1px solid var(--line); cursor: pointer; touch-action: manipulation; }
+.bench-stats { text-align: center; }
+.side { display: flex; flex-direction: column; gap: 8px; }
+.side h3 { margin: 6px 0 0; }
+.tools { display: flex; gap: 6px; }
+.relics { display: flex; flex-wrap: wrap; gap: 6px; }
+.relic { border: 1px solid var(--c); color: var(--c); border-radius: 14px; padding: 4px 10px; font-size: 12px; }
+
+@media (max-width: 800px) {
+  .bench-layout { grid-template-columns: 1fr; }
+}

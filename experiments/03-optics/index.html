@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#07070f">
+  <title>Эксперимент 3 — Оптический стол · 99 экспериментов</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="../../css/experiment.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <button id="btn-pause" class="hud-btn hidden" aria-label="Стол и пауза">☰<span>стол</span></button>
+
+  <section id="screen-menu" class="screen">
+    <div class="panel menu-panel">
+      <div class="exp-tag">ЭКСПЕРИМЕНТ 03</div>
+      <h1>Оптический стол</h1>
+      <p class="tagline">Один лазер. Зеркала, призмы, линзы и фильтры. Оружие — это траектория света, которую ты собрал.</p>
+      <div class="menu-stats" id="menu-stats"></div>
+      <div class="menu-buttons">
+        <button class="btn primary" id="btn-start">Начать забег</button>
+        <button class="btn" id="btn-lab">Лаборатория</button>
+        <button class="btn" id="btn-help">Как играть</button>
+        <a class="btn ghost" href="../../index.html">← К списку экспериментов</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-help" class="screen hidden">
+    <div class="panel help-panel">
+      <h2>Как играть</h2>
+      <ul class="help-list">
+        <li><b>WASD / стрелки</b> или <b>палец по экрану</b> — движение. Корабль сам поворачивается носом к ближайшему врагу (ЛКМ — повернуть вручную).</li>
+        <li>Корабль — это <b>оптический стол</b>. Слева стоит лазер, он светит вправо, в нос. Лучи, вышедшие за край стола, становятся оружием.</li>
+        <li>Луч упирается в первого врага на пути. Чтобы бить толпу, его надо делить, отражать и прожигать.</li>
+        <li><b>Зеркало</b> отражает, <b>делитель</b> раздваивает, <b>призма</b> даёт веер, <b>линза</b> усиливает, <b>фильтры</b> добавляют горение, замедление и пробитие.</li>
+        <li>Луч, отражённый назад, стреляет назад. Геометрия решает всё: можно собрать «ежа», «дробовик» или один сверхмощный луч.</li>
+        <li>В конце забега один элемент со стола можно сохранить как <b>реликвию</b>, он будет ждать тебя в начале каждого забега.</li>
+      </ul>
+      <button class="btn primary" data-back>Понятно</button>
+    </div>
+  </section>
+
+  <section id="screen-lab" class="screen hidden">
+    <div class="panel lab-panel">
+      <div class="lab-head"><h2>Лаборатория</h2><div class="samples" id="lab-currency"></div></div>
+      <h3>Реликвии</h3>
+      <div id="lab-relics" class="relics"></div>
+      <h3>Улучшения</h3>
+      <div class="cards" id="lab-upgrades"></div>
+      <h3>Новые элементы</h3>
+      <div class="cards" id="lab-unlocks"></div>
+      <div class="lab-foot">
+        <button class="btn primary" id="lab-start">Начать забег</button>
+        <button class="btn" data-back>Назад</button>
+        <button class="btn danger small" id="lab-reset">Сбросить прогресс</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-editor" class="screen hidden overlay">
+    <div class="panel editor-panel">
+      <div class="editor-head">
+        <h2 id="editor-title">Оптический стол</h2>
+        <div class="muted small" id="editor-sub"></div>
+      </div>
+      <div id="editor-offers" class="offers"></div>
+      <div class="bench-layout">
+        <div class="bench-col">
+          <div class="bench-wrap"><canvas id="bench-canvas"></canvas></div>
+          <div class="muted small bench-stats" id="bench-stats"></div>
+        </div>
+        <div class="side">
+          <div class="tools">
+            <button class="btn small" data-tool="rotate">↻ Поворот</button>
+            <button class="btn small" data-tool="remove">✕ Убрать</button>
+          </div>
+          <h3>Запас</h3>
+          <div id="editor-inventory" class="inventory"></div>
+          <div id="editor-info" class="info muted">Нажми на элемент, чтобы узнать, что он делает.</div>
+        </div>
+      </div>
+      <div class="editor-foot">
+        <span id="editor-msg" class="msg"></span>
+        <button class="btn danger small" id="editor-quit">Завершить забег</button>
+        <button class="btn primary" id="editor-continue">Продолжить</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-results" class="screen hidden overlay">
+    <div class="panel results-panel">
+      <h2>Забег окончен</h2>
+      <div id="results-body"></div>
+      <div class="menu-buttons">
+        <button class="btn primary" id="res-lab">В лабораторию</button>
+        <button class="btn" id="res-again">Ещё забег</button>
+        <button class="btn ghost" id="res-menu">В меню</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="../../shared/ui.js"></script>
+  <script src="../../shared/arena.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/optics.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
