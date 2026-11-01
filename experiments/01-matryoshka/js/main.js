@@ -16,7 +16,13 @@
   function show(id) {
     for (const s of document.querySelectorAll('.screen')) s.classList.add('hidden');
     if (id) $(id).classList.remove('hidden');
+    $('btn-pause').classList.toggle('hidden', !!id || !game || game.isOver());
   }
+  $('btn-pause').addEventListener('click', () => { if (game && !game.isOver()) openEditor('pause'); });
+  // Автопауза, когда вкладка/приложение уходит в фон (важно на телефоне).
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && game && !game.isOver() && !game.isPaused() && run && !run.ended) openEditor('pause');
+  });
   function go(id) { screenStack.push(id); show(id); refresh(id); }
   function back() { screenStack.pop(); const id = screenStack[screenStack.length - 1] || 'screen-menu'; show(id); refresh(id); }
   function refresh(id) {
@@ -216,7 +222,7 @@
     editorMode = mode;
     game.pause();
     $('editor-title').textContent = mode === 'levelup' ? `Новый уровень! Выбери модуль${run.pendingLevels > 1 ? ` (ещё ${run.pendingLevels})` : ''}` : 'Схема';
-    $('editor-sub').textContent = sub || `Макс. глубина: ${E1.maxDepth(meta)} · Клик по модулю в запасе, затем по пустому слоту. Клик по занятому слоту — вернуть в запас.`;
+    $('editor-sub').textContent = sub || `Макс. глубина: ${E1.maxDepth(meta)} · Выбери модуль в запасе, затем пустой слот. Нажатие на занятый слот возвращает модуль в запас.`;
     $('editor-quit').style.display = mode === 'pause' ? '' : 'none';
     setMsg('');
     renderEditor();
@@ -294,6 +300,7 @@
       b.addEventListener('click', () => {
         run.selected = run.selected === it ? null : it;
         renderEditor();
+        if (run.selected) showInfo(it);
       });
       inv.appendChild(b);
     }

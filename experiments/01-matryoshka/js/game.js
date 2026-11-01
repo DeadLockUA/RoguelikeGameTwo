@@ -40,6 +40,10 @@
 
     const keys = Object.create(null);
     const mouse = { x: 0, y: 0, down: false };
+    // Плавающий сенсорный джойстик: касание в любом месте задаёт центр, смещение пальца — направление.
+    const JOY_R = 60;
+    const joy = { id: null, ox: 0, oy: 0, x: 0, y: 0 };
+    let touchUsed = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
     let view = { w: 800, h: 600, dpr: 1 };
 
     // ---------- Пространственная сетка для врагов ----------
@@ -346,6 +350,14 @@
       if (keys.KeyD || keys.ArrowRight) mx += 1;
       const l = Math.hypot(mx, my);
       if (l > 0) { mx /= l; my /= l; }
+      if (joy.id !== null) {
+        const jx = joy.x - joy.ox, jy = joy.y - joy.oy;
+        const jl = Math.hypot(jx, jy);
+        if (jl > 8) {
+          const k = Math.min(1, jl / JOY_R) / jl; // аналоговая скорость
+          mx = jx * k; my = jy * k;
+        }
+      }
       player.x = Math.max(-ARENA, Math.min(ARENA, player.x + mx * player.speed * dt));
       player.y = Math.max(-ARENA, Math.min(ARENA, player.y + my * player.speed * dt));
       player.inv -= dt;
@@ -547,11 +559,13 @@
       ctx.fillRect(0, 0, w * Math.min(1, st.xp / st.xpNext), 6);
       // HP
       ctx.fillStyle = 'rgba(255,255,255,0.1)';
-      ctx.fillRect(16, 18, 220, 14);
+      const narrow = w < 600;
+      const hpW = narrow ? 130 : 220;
+      ctx.fillRect(16, 18, hpW, 14);
       ctx.fillStyle = player.hp / player.maxHp > 0.3 ? '#ff6b6b' : '#ff2d55';
-      ctx.fillRect(16, 18, 220 * (player.hp / player.maxHp), 14);
+      ctx.fillRect(16, 18, hpW * (player.hp / player.maxHp), 14);
       ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-      ctx.strokeRect(16.5, 18.5, 220, 14);
+      ctx.strokeRect(16.5, 18.5, hpW, 14);
       ctx.font = '12px ui-monospace, Menlo, Consolas, monospace';
       ctx.fillStyle = '#fff';
       ctx.textBaseline = 'middle';
@@ -561,22 +575,50 @@
       ctx.fillStyle = '#cfd8ff';
       ctx.fillText(`Уровень ${st.level}`, 16, 50);
       ctx.textAlign = 'center';
-      ctx.font = 'bold 18px ui-monospace, Menlo, Consolas, monospace';
+      ctx.font = `bold ${narrow ? 15 : 18}px ui-monospace, Menlo, Consolas, monospace`;
       ctx.fillStyle = st.wave % 5 === 0 ? '#ff6b6b' : '#ffffff';
-      ctx.fillText(`ВОЛНА ${st.wave}`, w / 2, 24);
+      const wx = narrow ? w / 2 + 40 : w / 2;
+      ctx.fillText(`ВОЛНА ${st.wave}`, wx, 24);
       ctx.font = '12px ui-monospace, Menlo, Consolas, monospace';
       ctx.fillStyle = '#8b93b8';
-      ctx.fillText(`${Math.ceil(E1.WAVE_DURATION - st.waveTime)} с до следующей`, w / 2, 44);
+      ctx.fillText(narrow ? `${Math.ceil(E1.WAVE_DURATION - st.waveTime)} с` : `${Math.ceil(E1.WAVE_DURATION - st.waveTime)} с до следующей`, wx, 44);
       ctx.textAlign = 'right';
       ctx.fillStyle = '#cfd8ff';
       ctx.font = '14px ui-monospace, Menlo, Consolas, monospace';
       ctx.fillText(`☠ ${st.kills}`, w - 16, 24);
       ctx.fillStyle = projs.length >= PROJ_CAP ? '#ffa94d' : '#8b93b8';
       ctx.font = '12px ui-monospace, Menlo, Consolas, monospace';
-      ctx.fillText(`снарядов: ${projs.length}${projs.length >= PROJ_CAP ? ' (лимит)' : ''}`, w - 16, 44);
-      ctx.fillStyle = '#5c6390';
-      ctx.fillText('E / Tab — схема · ЛКМ — ручной прицел', w - 16, 64);
+      ctx.fillText(narrow ? `◦ ${projs.length}` : `снарядов: ${projs.length}${projs.length >= PROJ_CAP ? ' (лимит)' : ''}`, w - 16, 44);
+      if (!touchUsed) {
+        ctx.fillStyle = '#5c6390';
+        ctx.fillText('E / Tab — схема · ЛКМ — ручной прицел', w - 16, 64);
+      }
       ctx.textAlign = 'left';
+
+      // джойстик
+      if (joy.id !== null) {
+        let jx = joy.x - joy.ox, jy = joy.y - joy.oy;
+        const jl = Math.hypot(jx, jy);
+        if (jl > JOY_R) { jx = (jx / jl) * JOY_R; jy = (jy / jl) * JOY_R; }
+        ctx.beginPath();
+        ctx.arc(joy.ox, joy.oy, JOY_R, 0, TAU);
+        ctx.fillStyle = 'rgba(125,249,255,0.06)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(125,249,255,0.35)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(joy.ox + jx, joy.oy + jy, 24, 0, TAU);
+        ctx.fillStyle = 'rgba(125,249,255,0.35)';
+        ctx.fill();
+      } else if (touchUsed && st.time < 6) {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(207,216,255,' + Math.min(1, 6 - st.time) * 0.8 + ')';
+        ctx.font = '14px ui-monospace, Menlo, Consolas, monospace';
+        ctx.fillText('Коснись и веди пальцем — движение', w / 2, view.h - 110);
+        ctx.fillText('Стрельба — автоматическая', w / 2, view.h - 88);
+        ctx.textAlign = 'left';
+      }
     }
 
     // ---------- Цикл ----------
@@ -601,10 +643,34 @@
 
     const onKeyDown = (e) => { keys[e.code] = true; };
     const onKeyUp = (e) => { keys[e.code] = false; };
-    const onMouseMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; };
-    const onMouseDown = (e) => { if (e.button === 0) mouse.down = true; };
-    const onMouseUp = (e) => { if (e.button === 0) mouse.down = false; };
-    const onBlur = () => { for (const k in keys) keys[k] = false; mouse.down = false; };
+    // Pointer Events: мышь — ручной прицел, касание/перо — джойстик.
+    const onPointerDown = (e) => {
+      if (e.pointerType === 'mouse') {
+        if (e.button === 0) { mouse.down = true; mouse.x = e.clientX; mouse.y = e.clientY; }
+        return;
+      }
+      touchUsed = true;
+      e.preventDefault();
+      if (joy.id !== null) return;
+      joy.id = e.pointerId;
+      joy.ox = joy.x = e.clientX;
+      joy.oy = joy.y = e.clientY;
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+    };
+    const onPointerMove = (e) => {
+      if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; return; }
+      if (e.pointerId !== joy.id) return;
+      e.preventDefault();
+      joy.x = e.clientX; joy.y = e.clientY;
+      // «перетаскивание» базы, если палец ушёл далеко — джойстик следует за пальцем
+      const dx = joy.x - joy.ox, dy = joy.y - joy.oy, d = Math.hypot(dx, dy);
+      if (d > JOY_R * 1.6) { const k = (d - JOY_R * 1.6) / d; joy.ox += dx * k; joy.oy += dy * k; }
+    };
+    const onPointerUp = (e) => {
+      if (e.pointerType === 'mouse') { if (e.button === 0) mouse.down = false; return; }
+      if (e.pointerId === joy.id) joy.id = null;
+    };
+    const onBlur = () => { for (const k in keys) keys[k] = false; mouse.down = false; joy.id = null; };
 
     const api = {
       start() {
@@ -613,9 +679,10 @@
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
         window.addEventListener('blur', onBlur);
-        canvas.addEventListener('mousemove', onMouseMove);
-        canvas.addEventListener('mousedown', onMouseDown);
-        window.addEventListener('mouseup', onMouseUp);
+        canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
+        window.addEventListener('pointermove', onPointerMove, { passive: false });
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
         running = true;
         last = performance.now();
         raf = requestAnimationFrame(frame);
@@ -627,14 +694,16 @@
         window.removeEventListener('keydown', onKeyDown);
         window.removeEventListener('keyup', onKeyUp);
         window.removeEventListener('blur', onBlur);
-        canvas.removeEventListener('mousemove', onMouseMove);
-        canvas.removeEventListener('mousedown', onMouseDown);
-        window.removeEventListener('mouseup', onMouseUp);
+        canvas.removeEventListener('pointerdown', onPointerDown);
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp);
+        window.removeEventListener('pointercancel', onPointerUp);
       },
       setTree(root) { st.spec = E1.compile(root, meta); },
       pause() { st.paused = true; onBlur(); },
       resume() { st.paused = false; last = performance.now(); },
       isOver: () => st.over,
+      isPaused: () => st.paused,
       stats: () => ({ wave: st.wave, kills: st.kills, bossKills: st.bossKills, time: st.time, level: st.level }),
       // для отладки и тестов
       _debug: { st, player, step: update, counts: () => ({ projs: projs.length, enemies: enemies.length }) },
