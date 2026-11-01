@@ -28,7 +28,7 @@ jobs:
       - name: Prepare site
         run: |
           mkdir -p _site
-          cp -r index.html css experiments docs README.md _site/
+          cp -r index.html css shared experiments docs README.md _site/
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
